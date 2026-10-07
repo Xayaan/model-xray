@@ -1,0 +1,34 @@
+# Pilot on one rented 32 GB GPU such as an RTX 5090 (about 2 hours, under $3 on Lium): transcoders
+# for 4 of the 17 MLP blocks of NVIDIA Nemotron 3 Nano 4B, spread through the network (layers 1,
+# 13, 27, 41), then `xray findings`. Training stops at 40M tokens or 75 minutes, whichever comes
+# first, so evaluation, feature analysis and the findings always fit the rented budget.
+name: nemotron3-nano-4b-pilot
+model:
+  name: nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16
+  dtype: bfloat16
+data:
+  sources:
+    - {hf: HuggingFaceFW/fineweb-edu, name: sample-10BT, split: train, text_field: text, weight: 0.8}
+    - {hf: HuggingFaceH4/ultrachat_200k, split: train_sft, chat_field: messages, weight: 0.2}
+  eval_sources:
+    - {hf: HuggingFaceFW/fineweb, name: sample-10BT, split: train, text_field: text, weight: 0.8}
+    - {hf: HuggingFaceH4/ultrachat_200k, split: test_sft, chat_field: messages, weight: 0.2}
+  ctx_len: 1024
+  batch_size: 4     # keeps peak memory inside a 32 GB card
+dictionary:
+  kind: transcoder
+  expansion: 8      # 25,088 features per MLP
+  k: 64
+train:
+  sites: ["mlp:evenly4"]
+  total_tokens: 40000000
+  max_minutes: 75
+  train_batch: 4096
+eval:
+  n_tokens: 200000
+  batch_size: 2
+analysis:
+  n_tokens: 2000000
+  top_examples: 10
+  window_left: 16
+  window_right: 4

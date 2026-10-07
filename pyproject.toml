@@ -1,0 +1,33 @@
+[project]
+name = "model-xray"
+version = "0.1.0"
+description = "Open interpretability toolkit: train transcoders and sparse autoencoders on Hugging Face models, browse their features, and test what they do."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.3",
+    "transformers>=5.0",
+    "accelerate",  # device_map: auto for models larger than one GPU
+    "datasets>=3.0",
+    "safetensors>=0.4",
+    "numpy",
+    "pyyaml",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+xray = "xray.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["xray*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

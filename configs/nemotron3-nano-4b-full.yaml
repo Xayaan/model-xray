@@ -1,0 +1,32 @@
+# Full run: transcoders for all 17 MLP blocks of Nemotron 3 Nano 4B. Fits one 80 GB GPU; on
+# several GPUs (`xray run CONFIG --gpus 8`, or COUNT=8 with lium/run_on_lium.sh) the dictionaries
+# are split between the GPUs, which also leaves room for wider ones (expansion 32+).
+name: nemotron3-nano-4b-mlp-8x
+model:
+  name: nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16
+  dtype: bfloat16
+data:
+  sources:
+    - {hf: HuggingFaceFW/fineweb-edu, name: sample-10BT, split: train, text_field: text, weight: 0.8}
+    - {hf: HuggingFaceH4/ultrachat_200k, split: train_sft, chat_field: messages, weight: 0.2}
+  eval_sources:
+    - {hf: HuggingFaceFW/fineweb, name: sample-10BT, split: train, text_field: text, weight: 0.8}
+    - {hf: HuggingFaceH4/ultrachat_200k, split: test_sft, chat_field: messages, weight: 0.2}
+  ctx_len: 1024
+  batch_size: 8
+dictionary:
+  kind: transcoder
+  expansion: 8
+  k: 64
+train:
+  sites: ["mlp:all"]
+  total_tokens: 400000000
+  train_batch: 4096
+eval:
+  n_tokens: 500000
+  batch_size: 2
+analysis:
+  n_tokens: 10000000
+  top_examples: 12
+  window_left: 16
+  window_right: 4
